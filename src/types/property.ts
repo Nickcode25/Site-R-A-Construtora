@@ -23,7 +23,9 @@ export interface CharacteristicDefinition extends PropertyCharacteristic {
   tipos_aplicaveis: PropertyType[];
 }
 
-export function propertyTypeLabel() { return "Apartamento"; }
+export function propertyTypeLabel(type?: PropertyType | string) {
+  return type === "apartamento" ? "Apartamento" : "Apartamento";
+}
 export function constructionStatusLabel(status: ConstructionStatus | string) {
   return CONSTRUCTION_STATUSES.find((option) => option.value === status)?.label ?? status;
 }
