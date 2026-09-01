@@ -64,3 +64,14 @@ test("informa Viçosa-MG no contato do footer", async () => {
   assert.match(footer, /Viçosa-MG/);
   assert.doesNotMatch(footer, /Atendimento sob consulta/);
 });
+
+test("permite navegar pela galeria com swipe em dispositivos móveis", async () => {
+  const [details, styles] = await Promise.all([
+    readFile(new URL("../src/views/PropertyDetailsPage.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(details, /onTouchStart=\{handleSwipeStart\}/);
+  assert.match(details, /onTouchEnd=\{handleSwipeEnd\}/);
+  assert.match(details, /horizontalDistance < 0 \? 1 : -1/);
+  assert.match(styles, /touch-action:\s*pan-y pinch-zoom/);
+});

@@ -20,7 +20,7 @@ import {
   Sofa,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { formatPrice, PropertyCard } from "@/src/components/PropertyCard";
 import { PageLoader } from "@/src/components/PageLoader";
@@ -43,6 +43,8 @@ const specificationIcons = {
   elevadores: ArrowUpDown,
 } as const;
 
+const swipeMinimumDistance = 48;
+
 function SpecificationIcon({ specificationKey }: { specificationKey: string }) {
   const Icon = specificationIcons[specificationKey as keyof typeof specificationIcons]
     ?? (specificationKey.includes("area") ? Ruler : Maximize2);
@@ -55,6 +57,8 @@ export function PropertyDetailsPage() {
   const { properties, loading } = useProperties();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipeLastRef = useRef<{ x: number; y: number } | null>(null);
 
   const property = properties.find((item) => item.id === id);
   const related = useMemo(
@@ -80,6 +84,38 @@ export function PropertyDetailsPage() {
   const changeLightboxMedia = useCallback((direction: number) => {
     setLightboxIndex((current) => (current + direction + media.length) % media.length);
   }, [media.length]);
+
+  const handleSwipeStart = (event: TouchEvent<HTMLDivElement>) => {
+    if (media.length <= 1 || (event.target as Element).closest("button, video")) return;
+    const touch = event.touches[0];
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+    swipeLastRef.current = swipeStartRef.current;
+  };
+
+  const handleSwipeMove = (event: TouchEvent<HTMLDivElement>) => {
+    if (!swipeStartRef.current || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    swipeLastRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const resetSwipe = () => {
+    swipeStartRef.current = null;
+    swipeLastRef.current = null;
+  };
+
+  const handleSwipeEnd = (event: TouchEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current;
+    const changedTouch = event.changedTouches[0];
+    const end = changedTouch ? { x: changedTouch.clientX, y: changedTouch.clientY } : swipeLastRef.current;
+    resetSwipe();
+    if (!start || !end) return;
+
+    const horizontalDistance = end.x - start.x;
+    const verticalDistance = end.y - start.y;
+    if (Math.abs(horizontalDistance) < swipeMinimumDistance || Math.abs(horizontalDistance) <= Math.abs(verticalDistance)) return;
+
+    changeLightboxMedia(horizontalDistance < 0 ? 1 : -1);
+  };
 
   // Navegação por teclado no Lightbox
   useEffect(() => {
@@ -198,7 +234,13 @@ export function PropertyDetailsPage() {
             </button>
           </header>
 
-          <div className="lightbox-stage">
+          <div
+            className="lightbox-stage"
+            onTouchStart={handleSwipeStart}
+            onTouchMove={handleSwipeMove}
+            onTouchEnd={handleSwipeEnd}
+            onTouchCancel={resetSwipe}
+          >
             {media.length > 1 && (
               <button
                 className="lightbox-nav-btn lightbox-nav-btn--prev"
