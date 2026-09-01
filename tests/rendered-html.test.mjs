@@ -15,9 +15,11 @@ test("renderiza a identidade da R & A Construtora", async () => {
 });
 
 test("mantém catálogo, SEO e banco focados em apartamentos", async () => {
-  const [layout, catalog, schema] = await Promise.all([
+  const [layout, catalog, hook, supabase, schema] = await Promise.all([
     readFile(new URL("../src/app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/views/PropertiesPage.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/hooks/useProperties.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/supabase.ts", import.meta.url), "utf8"),
     readFile(new URL("../supabase/schema.sql", import.meta.url), "utf8"),
   ]);
   assert.match(layout, /R & A Construtora/);
@@ -25,5 +27,7 @@ test("mantém catálogo, SEO e banco focados em apartamentos", async () => {
   assert.match(catalog, /Metragem/);
   assert.match(schema, /check \(tipo = 'apartamento'\)/);
   assert.match(schema, /Nenhum apartamento é inserido/);
+  assert.match(supabase, /ohicrkhbzbmuzocucnfv\.supabase\.co/);
+  assert.doesNotMatch(`${catalog}\n${hook}`, /mockProperties|Portfólio de apresentação/);
   assert.doesNotMatch(`${layout}\n${catalog}\n${schema}`, /Jorge Soares|JLS Negócios/i);
 });

@@ -7,7 +7,7 @@ import { useProperties } from "@/src/hooks/useProperties";
 import { whatsappDisplay, whatsappUrl } from "@/src/lib/contact";
 
 export function HomePage() {
-  const { properties, loading } = useProperties(true);
+  const { properties, loading, error } = useProperties(true);
 
   return (
     <>
@@ -42,7 +42,7 @@ export function HomePage() {
             <div><span className="section-label section-label--gold">Seleção R &amp; A</span><h2>Apartamentos em <em>destaque</em></h2></div>
             <p>Cada projeto pensado para o seu dia a dia: <br />localização, conforto e acabamento de qualidade.</p>
           </div>
-          {loading ? <PageLoader /> : properties.length ? <div className="property-grid property-grid--featured">{properties.map((property) => <PropertyCard key={property.id} property={property} compact />)}</div> : <div className="empty-state empty-state--dark"><span>—</span><h2>Novos apartamentos em breve</h2><p>Estamos preparando os próximos lançamentos da R &amp; A Construtora.</p></div>}
+          {loading ? <PageLoader /> : error ? <div className="empty-state empty-state--dark"><span>—</span><h2>Não foi possível carregar os destaques</h2><p>Tente novamente em alguns instantes.</p></div> : properties.length ? <div className="property-grid property-grid--featured">{properties.map((property) => <PropertyCard key={property.id} property={property} compact />)}</div> : <div className="empty-state empty-state--dark"><span>—</span><h2>Novos apartamentos em breve</h2><p>Os apartamentos marcados como destaque no painel administrativo aparecerão aqui.</p></div>}
           <div className="center-action"><Link to="/apartamentos" className="button button--outline-light">Ver todos os apartamentos <ArrowRight size={18} /></Link></div>
         </div>
       </section>
