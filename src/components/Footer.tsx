@@ -19,7 +19,7 @@ export function Footer() {
         <div>
           <span className="footer-title">Contato</span>
           <a href={whatsappUrl("Olá, equipe R & A! Gostaria de conhecer os apartamentos disponíveis.")} target="_blank" rel="noreferrer"><MessageCircle size={15} /> {whatsappDisplay}</a>
-          <span><MapPin size={15} /> Atendimento sob consulta</span>
+          <span><MapPin size={15} /> Viçosa-MG</span>
           <span aria-label="Instagram da R & A Construtora"><Instagram size={15} /> R & A Construtora</span>
         </div>
       </div>

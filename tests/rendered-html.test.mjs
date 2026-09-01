@@ -58,3 +58,9 @@ test("mantém a logo completa no header móvel", async () => {
   assert.match(mobileStyles, /\.header-brand\s*\{[\s\S]*?aspect-ratio:\s*4 \/ 3;[\s\S]*?overflow:\s*visible;/);
   assert.match(mobileStyles, /\.header-brand img\s*\{[\s\S]*?height:\s*auto;[\s\S]*?object-fit:\s*contain;/);
 });
+
+test("informa Viçosa-MG no contato do footer", async () => {
+  const footer = await readFile(new URL("../src/components/Footer.tsx", import.meta.url), "utf8");
+  assert.match(footer, /Viçosa-MG/);
+  assert.doesNotMatch(footer, /Atendimento sob consulta/);
+});
