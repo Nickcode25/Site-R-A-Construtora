@@ -46,7 +46,7 @@ export function PropertiesPage() {
 
   return (
     <main className="inner-page">
-      <section className="page-hero page-hero--properties"><div className="site-container"><span className="section-label section-label--gold">Portfólio R &amp; A Construtora</span><h1>Apartamentos para viver<br /><em>novos capítulos.</em></h1><p>Compare plantas, metragens, bairros e etapas da obra para encontrar o apartamento certo para você.</p></div></section>
+      <section className="page-hero page-hero--properties"><div className="site-container"><span className="section-label section-label--gold">Portfólio R &amp; A - Construtora</span><h1>Apartamentos para viver<br /><em>novos capítulos.</em></h1><p>Compare plantas, metragens, bairros e etapas da obra para encontrar o apartamento certo para você.</p></div></section>
       <section className="list-section section-light"><div className="site-container">
         <div className="filters-panel filters-panel--apartments">
           <div className="filters-title"><SlidersHorizontal size={19} /><strong>Filtrar apartamentos</strong></div>

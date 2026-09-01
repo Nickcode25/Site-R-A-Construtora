@@ -14,9 +14,9 @@ export function HomePage() {
       <section className="hero" style={{ backgroundImage: "url('/brand/hero-ra.png')" }}>
         <div className="hero-overlay" />
         <div className="site-container hero-content">
-          <div className="hero-kicker"><span /> Apartamentos que elevam o seu jeito de viver</div>
-          <h1><span className="hero-title-line">Construímos espaços</span><br /><span className="hero-title-line">para o seu <em className="hero-title-address">próximo capítulo.</em></span></h1>
-          <p>Apartamentos contemporâneos, projetos inteligentes e excelência construtiva do primeiro traço à entrega das chaves.</p>
+          <div className="hero-kicker"><span /> Cada prédio, uma nova perspectiva</div>
+          <h1><span className="hero-title-line">Construímos o lugar</span><br /><span className="hero-title-line">onde a sua <em className="hero-title-address">história vira lar.</em></span></h1>
+          <p>Negocie direto com a construtora, sem intermediários, e dê o primeiro passo rumo ao seu novo apartamento.</p>
           <div className="hero-actions">
             <Link className="button button--gold" to="/apartamentos">Conhecer apartamentos <ArrowRight size={18} /></Link>
             <a className="button button--glass" href={whatsappUrl("Olá, equipe R & A! Gostaria de conhecer os apartamentos disponíveis.")} target="_blank" rel="noreferrer"><MessageCircle size={18} /> Falar com a R &amp; A</a>
@@ -28,15 +28,8 @@ export function HomePage() {
 
       <section className="find-section section-light" id="encontre">
         <div className="site-container">
-          <div className="profile-strip">
-            <div className="profile-intro">
-              <img className="profile-symbol" src="/brand/logo-ra.png" alt="Símbolo da R & A Construtora" />
-              <div><span>Construção com propósito</span><h2>R &amp; A Construtora</h2><p>Especializada em apartamentos contemporâneos</p></div>
-            </div>
-            <p className="profile-quote">“Cada apartamento nasce para transformar metros quadrados em qualidade de vida.”</p>
-          </div>
           <div className="section-heading split-heading">
-            <div><span className="section-label">Encontre o apartamento ideal</span><h2>Qual é o seu<br />próximo passo?</h2></div>
+            <div><span className="section-label">O PRIMEIRO PASSO É AQUI</span><h2>Vamos encontrar o seu <br /> apartamento?</h2></div>
             <p>Explore por tamanho de planta ou fase da obra. Nossa equipe ajuda você a comparar cada detalhe com clareza.</p>
           </div>
           <PropertyTypeButtons />
@@ -47,7 +40,7 @@ export function HomePage() {
         <div className="site-container">
           <div className="section-heading featured-heading">
             <div><span className="section-label section-label--gold">Seleção R &amp; A</span><h2>Apartamentos em <em>destaque</em></h2></div>
-            <p>Projetos que combinam localização, arquitetura, conforto e potencial de valorização.</p>
+            <p>Cada projeto pensado para o seu dia a dia: <br />localização, conforto e acabamento de qualidade.</p>
           </div>
           {loading ? <PageLoader /> : properties.length ? <div className="property-grid property-grid--featured">{properties.map((property) => <PropertyCard key={property.id} property={property} compact />)}</div> : <div className="empty-state empty-state--dark"><span>—</span><h2>Novos apartamentos em breve</h2><p>Estamos preparando os próximos lançamentos da R &amp; A Construtora.</p></div>}
           <div className="center-action"><Link to="/apartamentos" className="button button--outline-light">Ver todos os apartamentos <ArrowRight size={18} /></Link></div>

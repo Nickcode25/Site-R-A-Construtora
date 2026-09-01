@@ -144,10 +144,17 @@ insert into public.caracteristicas (id, nome, categoria, tipos_aplicaveis) value
   ('playground', 'Playground', 'externa', array['apartamento']),
   ('portaria_24h', 'Portaria 24h', 'externa', array['apartamento']),
   ('salao_festas', 'Salão de festas', 'externa', array['apartamento']),
+  ('proximo_ufv', 'Próximo à UFV', 'externa', array['apartamento']),
+  ('proximo_via_alternativa_ufv', 'Próximo via alternativa da UFV', 'externa', array['apartamento']),
+  ('proximo_centro', 'Próximo ao Centro', 'externa', array['apartamento']),
   ('acesso_pcd', 'Acesso para PCD', 'geral', array['apartamento']),
+  ('cerca_eletrica', 'Cerca elétrica', 'geral', array['apartamento']),
+  ('controle_acesso_biometria_tag', 'Controle de acesso por biometria/tag', 'geral', array['apartamento']),
   ('documentacao_regularizada', 'Documentação regularizada', 'geral', array['apartamento']),
   ('elevador', 'Elevador', 'geral', array['apartamento']),
   ('interfone', 'Interfone', 'geral', array['apartamento']),
+  ('medicao_individualizada_agua_gas', 'Medição individualizada de água e gás', 'geral', array['apartamento']),
+  ('portao_eletronico', 'Portão eletrônico', 'geral', array['apartamento']),
   ('sistema_seguranca', 'Sistema de segurança', 'geral', array['apartamento'])
 on conflict (id) do update set
   nome = excluded.nome,

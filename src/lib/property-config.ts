@@ -41,10 +41,17 @@ export const DEFAULT_CHARACTERISTICS: CharacteristicDefinition[] = [
   { id: "playground", nome: "Playground", categoria: "externa", tipos_aplicaveis: ["apartamento"] },
   { id: "portaria_24h", nome: "Portaria 24h", categoria: "externa", tipos_aplicaveis: ["apartamento"] },
   { id: "salao_festas", nome: "Salão de festas", categoria: "externa", tipos_aplicaveis: ["apartamento"] },
+  { id: "proximo_ufv", nome: "Próximo à UFV", categoria: "externa", tipos_aplicaveis: ["apartamento"] },
+  { id: "proximo_via_alternativa_ufv", nome: "Próximo via alternativa da UFV", categoria: "externa", tipos_aplicaveis: ["apartamento"] },
+  { id: "proximo_centro", nome: "Próximo ao Centro", categoria: "externa", tipos_aplicaveis: ["apartamento"] },
   { id: "acesso_pcd", nome: "Acesso para PCD", categoria: "geral", tipos_aplicaveis: ["apartamento"] },
+  { id: "cerca_eletrica", nome: "Cerca elétrica", categoria: "geral", tipos_aplicaveis: ["apartamento"] },
+  { id: "controle_acesso_biometria_tag", nome: "Controle de acesso por biometria/tag", categoria: "geral", tipos_aplicaveis: ["apartamento"] },
   { id: "documentacao_regularizada", nome: "Documentação regularizada", categoria: "geral", tipos_aplicaveis: ["apartamento"] },
   { id: "elevador", nome: "Elevador", categoria: "geral", tipos_aplicaveis: ["apartamento"] },
   { id: "interfone", nome: "Interfone", categoria: "geral", tipos_aplicaveis: ["apartamento"] },
+  { id: "medicao_individualizada_agua_gas", nome: "Medição individualizada de água e gás", categoria: "geral", tipos_aplicaveis: ["apartamento"] },
+  { id: "portao_eletronico", nome: "Portão eletrônico", categoria: "geral", tipos_aplicaveis: ["apartamento"] },
   { id: "sistema_seguranca", nome: "Sistema de segurança", categoria: "geral", tipos_aplicaveis: ["apartamento"] },
 ];
 
@@ -68,9 +75,12 @@ export function normalizePropertyRow(row: Record<string, unknown>): Property {
     if (!item || typeof item !== "object") return [];
     const link = item as { caracteristica_id?: string; caracteristicas?: unknown };
     const nested = Array.isArray(link.caracteristicas) ? link.caracteristicas[0] : link.caracteristicas;
-    if (nested && typeof nested === "object") return [nested as Property["caracteristicas"][number]];
+    if (nested && typeof nested === "object" && Boolean((nested as { id?: string }).id)) {
+      const cast = nested as Property["caracteristicas"][number];
+      return [{ id: cast.id, nome: cast.nome, categoria: cast.categoria }];
+    }
     const fallback = DEFAULT_CHARACTERISTICS.find((feature) => feature.id === link.caracteristica_id);
-    return fallback ? [{ id: fallback.id, nome: fallback.nome, categoria: fallback.categoria }] : [];
+    return fallback ? [{ id: fallback.id, nome: fallback.nome, categoria: fallback.categoria }] : (link.caracteristica_id ? [{ id: link.caracteristica_id, nome: link.caracteristica_id, categoria: "geral" as const }] : []);
   }).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
   return {
     ...(row as unknown as Property),
