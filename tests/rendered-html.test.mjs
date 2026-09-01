@@ -38,3 +38,16 @@ test("centraliza todos os contatos no WhatsApp da R & A", async () => {
   assert.match(contact, /\(31\) 98040-5294/);
   assert.doesNotMatch(contact, /5531999495764|\(31\) 99949-5764/);
 });
+
+test("exibe a informação de mobília antes das demais especificações", async () => {
+  const [config, admin] = await Promise.all([
+    readFile(new URL("../src/lib/property-config.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/views/AdminPage.tsx", import.meta.url), "utf8"),
+  ]);
+  const furnitureIndex = config.indexOf('key: "mobilia"');
+  const areaIndex = config.indexOf('key: "area_m2"');
+  assert.ok(furnitureIndex >= 0 && furnitureIndex < areaIndex);
+  assert.match(config, /Com mobília/);
+  assert.match(config, /Sem mobília/);
+  assert.match(admin, /Mobília<select required/);
+});

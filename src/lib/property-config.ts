@@ -11,6 +11,15 @@ export interface SpecificationDefinition {
 }
 
 const apartmentSpecifications: SpecificationDefinition[] = [
+  {
+    key: "mobilia",
+    label: "Mobília",
+    type: "select",
+    options: [
+      { value: "com_mobilia", label: "Com mobília" },
+      { value: "sem_mobilia", label: "Sem mobília" },
+    ],
+  },
   { key: "area_m2", label: "Área privativa", type: "number", unit: "m²", step: "0.01" },
   { key: "quartos", label: "Quartos", type: "number", step: "1" },
   { key: "suites", label: "Suítes", type: "number", step: "1", optional: true },
