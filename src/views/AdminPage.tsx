@@ -1,7 +1,7 @@
 "use client";
 
 import { Building2, Edit3, GripVertical, ImageOff, LayoutDashboard, LogOut, Plus, Save, Star, Trash2, X } from "lucide-react";
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { AdminOverview, type AdminPropertyFilter } from "@/src/components/AdminOverview";
 import { PageLoader } from "@/src/components/PageLoader";
@@ -49,15 +49,6 @@ export function AdminPage() {
     | { type: "new"; file: File; preview: string };
 
   const [photoItems, setPhotoItems] = useState<PhotoItem[]>([]);
-
-  // Sincroniza photoItems sempre que o modal é aberto
-  useEffect(() => {
-    if (!modalOpen) return;
-    const saved: PhotoItem[] = (form.imagens ?? []).map((url) => ({ type: "saved" as const, url }));
-    const newFiles: PhotoItem[] = files.map((file) => ({ type: "new" as const, file, preview: URL.createObjectURL(file) }));
-    setPhotoItems([...saved, ...newFiles]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modalOpen]);
 
   // Quando novos arquivos são adicionados, acrescenta ao fim dos photoItems
   const prevFilesLengthRef = useRef(0);
@@ -186,7 +177,7 @@ export function AdminPage() {
     const initialForm = formFromProperty(property);
     setForm(initialForm);
     setFiles([]);
-    setPhotoItems([]);
+    setPhotoItems((initialForm.imagens ?? []).map((url) => ({ type: "saved", url })));
     prevFilesLengthRef.current = 0;
     setMessage(null);
     setModalOpen(true);

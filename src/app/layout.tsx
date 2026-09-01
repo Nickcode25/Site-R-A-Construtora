@@ -1,10 +1,25 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const siteOrigin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+function resolveMetadataBase() {
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
+    || process.env.VERCEL_URL?.trim();
+  const candidate = configuredOrigin || (vercelHost ? `https://${vercelHost}` : "http://localhost:3000");
+
+  try {
+    const origin = new URL(candidate);
+    if (origin.protocol !== "http:" && origin.protocol !== "https:") {
+      throw new Error("Unsupported site URL protocol");
+    }
+    return origin;
+  } catch {
+    return new URL("http://localhost:3000");
+  }
+}
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteOrigin),
+  metadataBase: resolveMetadataBase(),
   title: {
     default: "R & A Construtora | Apartamentos que elevam o seu jeito de viver",
     template: "%s | R & A Construtora",
