@@ -31,3 +31,10 @@ test("mantém catálogo, SEO e banco focados em apartamentos", async () => {
   assert.doesNotMatch(`${catalog}\n${hook}`, /mockProperties|Portfólio de apresentação/);
   assert.doesNotMatch(`${layout}\n${catalog}\n${schema}`, /Jorge Soares|JLS Negócios/i);
 });
+
+test("centraliza todos os contatos no WhatsApp da R & A", async () => {
+  const contact = await readFile(new URL("../src/lib/contact.ts", import.meta.url), "utf8");
+  assert.match(contact, /5531980405294/);
+  assert.match(contact, /\(31\) 98040-5294/);
+  assert.doesNotMatch(contact, /5531999495764|\(31\) 99949-5764/);
+});
