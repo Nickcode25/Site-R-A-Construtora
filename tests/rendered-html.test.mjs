@@ -51,3 +51,10 @@ test("exibe a informação de mobília antes das demais especificações", async
   assert.match(config, /Sem mobília/);
   assert.match(admin, /Mobília<select required/);
 });
+
+test("mantém a logo completa no header móvel", async () => {
+  const styles = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  const mobileStyles = styles.slice(styles.indexOf("@media (max-width: 768px)"));
+  assert.match(mobileStyles, /\.header-brand\s*\{[\s\S]*?aspect-ratio:\s*4 \/ 3;[\s\S]*?overflow:\s*visible;/);
+  assert.match(mobileStyles, /\.header-brand img\s*\{[\s\S]*?height:\s*auto;[\s\S]*?object-fit:\s*contain;/);
+});
