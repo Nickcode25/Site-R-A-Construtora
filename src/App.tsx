@@ -4,11 +4,11 @@ import { useEffect, useSyncExternalStore } from "react";
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { Footer } from "@/src/components/Footer";
 import { Header } from "@/src/components/Header";
-import { AdminLoginPage } from "@/src/pages/AdminLoginPage";
-import { AdminPage } from "@/src/pages/AdminPage";
-import { HomePage } from "@/src/pages/HomePage";
-import { PropertiesPage } from "@/src/pages/PropertiesPage";
-import { PropertyDetailsPage } from "@/src/pages/PropertyDetailsPage";
+import { AdminLoginPage } from "@/src/views/AdminLoginPage";
+import { AdminPage } from "@/src/views/AdminPage";
+import { HomePage } from "@/src/views/HomePage";
+import { PropertiesPage } from "@/src/views/PropertiesPage";
+import { PropertyDetailsPage } from "@/src/views/PropertyDetailsPage";
 
 function ScrollManager() {
   const { pathname, hash } = useLocation();
