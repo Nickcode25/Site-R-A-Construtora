@@ -152,8 +152,10 @@ export function AdminPage() {
   }, []);
 
   function addVideoFiles(selected: File[]) {
-    const validFiles = selected.filter((file) => file.size <= maxVideoSizeBytes);
-    if (validFiles.length !== selected.length) setMessage("Cada vídeo deve ter no máximo 50 MB.");
+    const mp4Files = selected.filter((file) => file.type === "video/mp4" || file.name.toLowerCase().endsWith(".mp4"));
+    const validFiles = mp4Files.filter((file) => file.size <= maxVideoSizeBytes);
+    if (mp4Files.length !== selected.length) setMessage("Selecione um arquivo de vídeo no formato MP4.");
+    else if (validFiles.length !== selected.length) setMessage("Cada vídeo MP4 deve ter no máximo 50 MB.");
     if (!validFiles.length) return;
     setVideoFiles((current) => [...current, ...validFiles]);
     setVideoItems((current) => [
@@ -281,7 +283,7 @@ export function AdminPage() {
     for (const file of videoFiles) {
       const safeName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "-");
       const path = `${propertyId}/videos/${crypto.randomUUID()}-${safeName}`;
-      const { error } = await supabase.storage.from("apartamentos").upload(path, file, { upsert: false });
+      const { error } = await supabase.storage.from("apartamentos").upload(path, file, { upsert: false, contentType: "video/mp4" });
       if (error) throw error;
       urls.push(supabase.storage.from("apartamentos").getPublicUrl(path).data.publicUrl);
     }
@@ -394,6 +396,42 @@ export function AdminPage() {
           <div className="form-section form-section--specs"><h3>Planta e metragem</h3><label>Mobília<select required value={String(form.especificacoes.mobilia ?? "")} onChange={(event) => setForm({ ...form, especificacoes: { ...form.especificacoes, mobilia: event.target.value } })}><option value="" disabled>Selecione</option><option value="com_mobilia">Com mobília</option><option value="sem_mobilia">Sem mobília</option></select></label><label>Área privativa (m²)<input type="number" min="0" step="0.01" required value={form.area || ""} onChange={(event) => updateNumber("area", event.target.value)} /></label><label>Quartos<input type="number" min="0" value={form.quartos || ""} onChange={(event) => updateNumber("quartos", event.target.value)} /></label><label>Banheiros<input type="number" min="0" value={form.banheiros || ""} onChange={(event) => updateNumber("banheiros", event.target.value)} /></label><label>Vagas<input type="number" min="0" value={form.vagas || ""} onChange={(event) => updateNumber("vagas", event.target.value)} /></label><label>Suítes<input type="number" min="0" value={Number(form.especificacoes.suites) || ""} onChange={(event) => setForm({ ...form, especificacoes: { ...form.especificacoes, suites: Number(event.target.value) || 0 } })} /></label><label>Previsão de entrega<input value={String(form.especificacoes.previsao_entrega ?? "")} onChange={(event) => setForm({ ...form, especificacoes: { ...form.especificacoes, previsao_entrega: event.target.value } })} /></label></div>
           <div className="form-section"><h3>Diferenciais</h3><div className="characteristic-options span-2">{DEFAULT_CHARACTERISTICS.map((item) => { const checked = form.caracteristicas.includes(item.id); return <label className={`characteristic-option ${checked ? "is-checked" : ""}`} key={item.id}><input type="checkbox" checked={checked} onChange={() => setForm((current) => ({ ...current, caracteristicas: checked ? current.caracteristicas.filter((id) => id !== item.id) : [...current.caracteristicas, item.id] }))} /><span className="characteristic-check">✓</span>{item.nome}</label>; })}</div></div>
           <div className="form-section">
+            <h3>Vídeo do apartamento (MP4)</h3>
+            <label className="upload-field upload-field--video span-2">
+              <span><Video /> Escolher vídeo MP4</span>
+              <input
+                type="file"
+                accept=".mp4,video/mp4"
+                multiple
+                onChange={(event) => {
+                  addVideoFiles(Array.from(event.target.files ?? []));
+                  event.target.value = "";
+                }}
+              />
+              <small>Arquivo MP4 com até 50 MB. Arraste as prévias para escolher qual vídeo será o principal.</small>
+            </label>
+            {videoItems.length > 0 && (
+              <div className="photo-preview-grid span-2">
+                {videoItems.map((item, index) => (
+                  <div
+                    key={item.type === "saved" ? item.url : `${item.file.name}-${index}`}
+                    className={`photo-preview video-preview${item.type === "new" ? " photo-preview--new" : ""} photo-preview--draggable`}
+                    draggable
+                    onDragStart={() => { videoDragIndexRef.current = index; }}
+                    onDragOver={(event) => handleVideoDragOver(event, index)}
+                    onDragEnd={handleVideoDragEnd}
+                  >
+                    <div className="photo-preview-drag-handle" title="Arrastar para reordenar"><GripVertical size={14} /></div>
+                    <video src={item.type === "saved" ? item.url : item.preview} muted playsInline preload="metadata" />
+                    <span><Play /> {item.type === "saved" ? "Salvo" : "Novo"}</span>
+                    {index === 0 && <span className="photo-preview-badge-main">Principal</span>}
+                    <button type="button" onClick={() => removeVideoItem(index)} title="Remover vídeo"><X /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="form-section">
             <h3>Fotos</h3>
             <label className="span-2">
               Adicionar imagens
@@ -434,42 +472,6 @@ export function AdminPage() {
                     <button type="button" onClick={() => removePhotoItem(idx)} title="Remover foto">
                       <X />
                     </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="form-section">
-            <h3>Vídeos</h3>
-            <label className="upload-field upload-field--video span-2">
-              <span><Video /> Adicionar vídeos do apartamento</span>
-              <input
-                type="file"
-                accept="video/mp4,video/webm,video/quicktime"
-                multiple
-                onChange={(event) => {
-                  addVideoFiles(Array.from(event.target.files ?? []));
-                  event.target.value = "";
-                }}
-              />
-              <small>MP4, WebM ou MOV, com até 50 MB por vídeo. Arraste as prévias para escolher a ordem.</small>
-            </label>
-            {videoItems.length > 0 && (
-              <div className="photo-preview-grid span-2">
-                {videoItems.map((item, index) => (
-                  <div
-                    key={item.type === "saved" ? item.url : `${item.file.name}-${index}`}
-                    className={`photo-preview video-preview${item.type === "new" ? " photo-preview--new" : ""} photo-preview--draggable`}
-                    draggable
-                    onDragStart={() => { videoDragIndexRef.current = index; }}
-                    onDragOver={(event) => handleVideoDragOver(event, index)}
-                    onDragEnd={handleVideoDragEnd}
-                  >
-                    <div className="photo-preview-drag-handle" title="Arrastar para reordenar"><GripVertical size={14} /></div>
-                    <video src={item.type === "saved" ? item.url : item.preview} muted playsInline preload="metadata" />
-                    <span><Play /> {item.type === "saved" ? "Salvo" : "Novo"}</span>
-                    {index === 0 && <span className="photo-preview-badge-main">Principal</span>}
-                    <button type="button" onClick={() => removeVideoItem(index)} title="Remover vídeo"><X /></button>
                   </div>
                 ))}
               </div>

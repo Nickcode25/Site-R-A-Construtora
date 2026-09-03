@@ -82,9 +82,11 @@ test("permite enviar e assistir aos vídeos dos apartamentos", async () => {
     readFile(new URL("../src/views/PropertyDetailsPage.tsx", import.meta.url), "utf8"),
     readFile(new URL("../supabase/schema.sql", import.meta.url), "utf8"),
   ]);
-  assert.match(admin, /accept="video\/mp4,video\/webm,video\/quicktime"/);
+  assert.match(admin, /accept="\.mp4,video\/mp4"/);
   assert.match(admin, /uploadApartmentVideos/);
   assert.match(admin, /videos: finalVideos/);
+  assert.match(admin, /contentType: "video\/mp4"/);
+  assert.ok(admin.indexOf("Vídeo do apartamento (MP4)") < admin.indexOf("<h3>Fotos</h3>"));
   assert.match(details, /Assista a um vídeo do imóvel/);
   assert.match(details, /openLightbox\(firstVideoIndex\)/);
   assert.match(schema, /'video\/mp4', 'video\/webm', 'video\/quicktime'/);
