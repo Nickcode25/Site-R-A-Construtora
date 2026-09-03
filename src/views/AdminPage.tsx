@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Edit3, GripVertical, ImageOff, LayoutDashboard, LogOut, Plus, Save, Star, Trash2, X } from "lucide-react";
+import { Building2, Edit3, GripVertical, ImageOff, LayoutDashboard, LogOut, Play, Plus, Save, Star, Trash2, Video, X } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { AdminOverview, type AdminPropertyFilter } from "@/src/components/AdminOverview";
@@ -14,6 +14,7 @@ import { supabase } from "@/src/lib/supabase";
 import { CONSTRUCTION_STATUSES, constructionStatusLabel, type Property, type PropertyFormData, type PropertyStatus } from "@/src/types/property";
 
 type Section = "overview" | "apartments";
+const maxVideoSizeBytes = 50 * 1024 * 1024;
 
 const emptyForm = (): PropertyFormData => ({
   codigo: "", titulo: "", tipo: "apartamento", status_obra: "lancamento", preco: 0,
@@ -36,6 +37,7 @@ export function AdminPage() {
   const [editing, setEditing] = useState<Property | null>(null);
   const [form, setForm] = useState<PropertyFormData>(emptyForm);
   const [files, setFiles] = useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -49,6 +51,10 @@ export function AdminPage() {
     | { type: "new"; file: File; preview: string };
 
   const [photoItems, setPhotoItems] = useState<PhotoItem[]>([]);
+  type VideoItem =
+    | { type: "saved"; url: string }
+    | { type: "new"; file: File; preview: string };
+  const [videoItems, setVideoItems] = useState<VideoItem[]>([]);
 
   // Quando novos arquivos são adicionados, acrescenta ao fim dos photoItems
   const prevFilesLengthRef = useRef(0);
@@ -119,6 +125,56 @@ export function AdminPage() {
     });
   }
 
+  const videoDragIndexRef = useRef<number | null>(null);
+
+  const handleVideoDragOver = useCallback((event: React.DragEvent, index: number) => {
+    event.preventDefault();
+    const from = videoDragIndexRef.current;
+    if (from === null || from === index) return;
+    setVideoItems((current) => {
+      const next = [...current];
+      const [moved] = next.splice(from, 1);
+      next.splice(index, 0, moved);
+      videoDragIndexRef.current = index;
+      return next;
+    });
+  }, []);
+
+  const handleVideoDragEnd = useCallback(() => {
+    videoDragIndexRef.current = null;
+    setVideoItems((current) => {
+      const savedUrls = current.filter((item): item is Extract<VideoItem, { type: "saved" }> => item.type === "saved").map((item) => item.url);
+      const newItems = current.filter((item): item is Extract<VideoItem, { type: "new" }> => item.type === "new");
+      setForm((previous) => ({ ...previous, videos: savedUrls }));
+      setVideoFiles(newItems.map((item) => item.file));
+      return current;
+    });
+  }, []);
+
+  function addVideoFiles(selected: File[]) {
+    const validFiles = selected.filter((file) => file.size <= maxVideoSizeBytes);
+    if (validFiles.length !== selected.length) setMessage("Cada vídeo deve ter no máximo 50 MB.");
+    if (!validFiles.length) return;
+    setVideoFiles((current) => [...current, ...validFiles]);
+    setVideoItems((current) => [
+      ...current,
+      ...validFiles.map((file) => ({ type: "new" as const, file, preview: URL.createObjectURL(file) })),
+    ]);
+  }
+
+  function removeVideoItem(index: number) {
+    setVideoItems((current) => {
+      const item = current[index];
+      if (item.type === "new") URL.revokeObjectURL(item.preview);
+      const next = current.filter((_, itemIndex) => itemIndex !== index);
+      const savedUrls = next.filter((video): video is Extract<VideoItem, { type: "saved" }> => video.type === "saved").map((video) => video.url);
+      const newItems = next.filter((video): video is Extract<VideoItem, { type: "new" }> => video.type === "new");
+      setForm((previous) => ({ ...previous, videos: savedUrls }));
+      setVideoFiles(newItems.map((video) => video.file));
+      return next;
+    });
+  }
+
   if (authLoading) return <main className="inner-page"><PageLoader /></main>;
   if (!user) return <Navigate to="/admin/login" replace />;
 
@@ -170,14 +226,16 @@ export function AdminPage() {
     }
   }
 
-  function openCreate() { setEditing(null); setForm(emptyForm()); setFiles([]); setPhotoItems([]); prevFilesLengthRef.current = 0; setMessage(null); setModalOpen(true); }
+  function openCreate() { setEditing(null); setForm(emptyForm()); setFiles([]); setVideoFiles([]); setPhotoItems([]); setVideoItems([]); prevFilesLengthRef.current = 0; setMessage(null); setModalOpen(true); }
 
   async function openEdit(property: Property) {
     setEditing(property);
     const initialForm = formFromProperty(property);
     setForm(initialForm);
     setFiles([]);
+    setVideoFiles([]);
     setPhotoItems((initialForm.imagens ?? []).map((url) => ({ type: "saved", url })));
+    setVideoItems((initialForm.videos ?? []).map((url) => ({ type: "saved", url })));
     prevFilesLengthRef.current = 0;
     setMessage(null);
     setModalOpen(true);
@@ -217,6 +275,19 @@ export function AdminPage() {
     return urls;
   }
 
+  async function uploadApartmentVideos(propertyId: string) {
+    if (!supabase || !videoFiles.length) return form.videos ?? [];
+    const urls = [...(form.videos ?? [])];
+    for (const file of videoFiles) {
+      const safeName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "-");
+      const path = `${propertyId}/videos/${crypto.randomUUID()}-${safeName}`;
+      const { error } = await supabase.storage.from("apartamentos").upload(path, file, { upsert: false });
+      if (error) throw error;
+      urls.push(supabase.storage.from("apartamentos").getPublicUrl(path).data.publicUrl);
+    }
+    return urls;
+  }
+
   async function saveProperty(event: FormEvent) {
     event.preventDefault();
     if (!supabase) { setMessage("A anon key do novo Supabase ainda não foi configurada."); return; }
@@ -233,17 +304,17 @@ export function AdminPage() {
       };
       let propertyId = editing?.id;
       if (propertyId) {
-        const finalImages = await uploadApartmentFiles(propertyId);
-        const { error } = await supabase.from("imoveis").update({ ...payload, imagens: finalImages }).eq("id", propertyId);
+        const [finalImages, finalVideos] = await Promise.all([uploadApartmentFiles(propertyId), uploadApartmentVideos(propertyId)]);
+        const { error } = await supabase.from("imoveis").update({ ...payload, imagens: finalImages, videos: finalVideos }).eq("id", propertyId);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.from("imoveis").insert({ ...payload, imagens: [] }).select("id").single();
+        const { data, error } = await supabase.from("imoveis").insert({ ...payload, imagens: [], videos: [] }).select("id").single();
         if (error) throw error;
         propertyId = data.id as string;
-        const finalImages = await uploadApartmentFiles(propertyId);
-        if (finalImages.length) {
-          const { error: imgErr } = await supabase.from("imoveis").update({ imagens: finalImages }).eq("id", propertyId);
-          if (imgErr) throw imgErr;
+        const [finalImages, finalVideos] = await Promise.all([uploadApartmentFiles(propertyId), uploadApartmentVideos(propertyId)]);
+        if (finalImages.length || finalVideos.length) {
+          const { error: mediaError } = await supabase.from("imoveis").update({ imagens: finalImages, videos: finalVideos }).eq("id", propertyId);
+          if (mediaError) throw mediaError;
         }
       }
       const { error: clearError } = await supabase.from("imovel_caracteristicas").delete().eq("imovel_id", propertyId);
@@ -267,7 +338,7 @@ export function AdminPage() {
         );
         if (error) throw error;
       }
-      await reload(); setModalOpen(false); setFiles([]);
+      await reload(); setModalOpen(false); setFiles([]); setVideoFiles([]); setVideoItems([]);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível salvar o apartamento.");
     } finally { setSaving(false); }
@@ -363,6 +434,42 @@ export function AdminPage() {
                     <button type="button" onClick={() => removePhotoItem(idx)} title="Remover foto">
                       <X />
                     </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="form-section">
+            <h3>Vídeos</h3>
+            <label className="upload-field upload-field--video span-2">
+              <span><Video /> Adicionar vídeos do apartamento</span>
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                multiple
+                onChange={(event) => {
+                  addVideoFiles(Array.from(event.target.files ?? []));
+                  event.target.value = "";
+                }}
+              />
+              <small>MP4, WebM ou MOV, com até 50 MB por vídeo. Arraste as prévias para escolher a ordem.</small>
+            </label>
+            {videoItems.length > 0 && (
+              <div className="photo-preview-grid span-2">
+                {videoItems.map((item, index) => (
+                  <div
+                    key={item.type === "saved" ? item.url : `${item.file.name}-${index}`}
+                    className={`photo-preview video-preview${item.type === "new" ? " photo-preview--new" : ""} photo-preview--draggable`}
+                    draggable
+                    onDragStart={() => { videoDragIndexRef.current = index; }}
+                    onDragOver={(event) => handleVideoDragOver(event, index)}
+                    onDragEnd={handleVideoDragEnd}
+                  >
+                    <div className="photo-preview-drag-handle" title="Arrastar para reordenar"><GripVertical size={14} /></div>
+                    <video src={item.type === "saved" ? item.url : item.preview} muted playsInline preload="metadata" />
+                    <span><Play /> {item.type === "saved" ? "Salvo" : "Novo"}</span>
+                    {index === 0 && <span className="photo-preview-badge-main">Principal</span>}
+                    <button type="button" onClick={() => removeVideoItem(index)} title="Remover vídeo"><X /></button>
                   </div>
                 ))}
               </div>

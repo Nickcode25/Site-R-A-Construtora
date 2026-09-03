@@ -75,3 +75,17 @@ test("permite navegar pela galeria com swipe em dispositivos móveis", async () 
   assert.match(details, /horizontalDistance < 0 \? 1 : -1/);
   assert.match(styles, /touch-action:\s*pan-y pinch-zoom/);
 });
+
+test("permite enviar e assistir aos vídeos dos apartamentos", async () => {
+  const [admin, details, schema] = await Promise.all([
+    readFile(new URL("../src/views/AdminPage.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/views/PropertyDetailsPage.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../supabase/schema.sql", import.meta.url), "utf8"),
+  ]);
+  assert.match(admin, /accept="video\/mp4,video\/webm,video\/quicktime"/);
+  assert.match(admin, /uploadApartmentVideos/);
+  assert.match(admin, /videos: finalVideos/);
+  assert.match(details, /Assista a um vídeo do imóvel/);
+  assert.match(details, /openLightbox\(firstVideoIndex\)/);
+  assert.match(schema, /'video\/mp4', 'video\/webm', 'video\/quicktime'/);
+});

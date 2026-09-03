@@ -18,6 +18,7 @@ import {
   Ruler,
   Share2,
   Sofa,
+  Video,
   X,
 } from "lucide-react";
 import { type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -145,6 +146,19 @@ export function PropertyDetailsPage() {
   const mainMedia = media[0];
   const secondaryMedia = media.slice(1, 5);
   const remainingCount = media.length > 5 ? media.length - 4 : 0;
+  const firstVideoIndex = property.imagens.length;
+  const watchVideoButton = property.videos.length > 0 && (
+    <button
+      type="button"
+      className="gallery-watch-video"
+      onClick={(event) => {
+        event.stopPropagation();
+        openLightbox(firstVideoIndex);
+      }}
+    >
+      <Video aria-hidden="true" /> Assista a um vídeo do imóvel
+    </button>
+  );
 
   return (
     <main className="inner-page detail-page">
@@ -173,6 +187,7 @@ export function PropertyDetailsPage() {
               ) : (
                 <video src={mainMedia.url} controls playsInline />
               )}
+              {watchVideoButton}
             </div>
           </div>
         ) : (
@@ -184,6 +199,7 @@ export function PropertyDetailsPage() {
               ) : (
                 <video src={mainMedia.url} muted playsInline preload="metadata" />
               )}
+              {watchVideoButton}
             </div>
 
             {/* Grid 2x2 de fotos secundárias à direita */}
